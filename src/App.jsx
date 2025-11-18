@@ -1,7 +1,8 @@
-// App.jsx
+// src/App.jsx
 import React, { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { authService, firestoreService } from "./firebaseService";
+import { authService, firestoreService } from "./services/firebaseService";
+import AIPanel from "./components/AIPanel";
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -11,8 +12,8 @@ const App = () => {
   const [newNote, setNewNote] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("notes"); // 'notes' ou 'ai'
 
-  // Observar mudanças de autenticação
   useEffect(() => {
     const auth = authService.getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -28,7 +29,6 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // Carregar notas
   const loadNotes = async (userId) => {
     try {
       const loadedNotes = await firestoreService.loadNotes(userId);
@@ -38,7 +38,6 @@ const App = () => {
     }
   };
 
-  // Criar conta
   const handleSignUp = async () => {
     if (!email || !password) {
       setError("Preencha email e senha");
@@ -52,7 +51,6 @@ const App = () => {
     }
   };
 
-  // Fazer login
   const handleLogin = async () => {
     if (!email || !password) {
       setError("Preencha email e senha");
@@ -66,7 +64,6 @@ const App = () => {
     }
   };
 
-  // Login com Google
   const handleGoogleLogin = async () => {
     try {
       await authService.loginWithGoogle();
@@ -76,7 +73,6 @@ const App = () => {
     }
   };
 
-  // Logout
   const handleLogout = async () => {
     try {
       await authService.logout();
@@ -85,7 +81,6 @@ const App = () => {
     }
   };
 
-  // Adicionar nota
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
     try {
@@ -97,7 +92,6 @@ const App = () => {
     }
   };
 
-  // Deletar nota
   const handleDeleteNote = async (noteId) => {
     try {
       await firestoreService.deleteNote(noteId);
@@ -113,7 +107,6 @@ const App = () => {
     );
   }
 
-  // Tela de Login
   if (!user) {
     return (
       <div style={{ padding: "20px", maxWidth: "400px", margin: "50px auto" }}>
@@ -126,6 +119,7 @@ const App = () => {
               color: "#c62828",
               padding: "10px",
               marginBottom: "15px",
+              borderRadius: "4px",
             }}
           >
             {error}
@@ -138,7 +132,13 @@ const App = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seu@email.com"
-            style={{ width: "100%", padding: "10px", fontSize: "14px" }}
+            style={{
+              width: "100%",
+              padding: "10px",
+              fontSize: "14px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+            }}
           />
         </div>
 
@@ -148,7 +148,13 @@ const App = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="senha (mínimo 6 caracteres)"
-            style={{ width: "100%", padding: "10px", fontSize: "14px" }}
+            style={{
+              width: "100%",
+              padding: "10px",
+              fontSize: "14px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+            }}
           />
         </div>
 
@@ -162,6 +168,7 @@ const App = () => {
             border: "none",
             marginBottom: "10px",
             cursor: "pointer",
+            borderRadius: "4px",
           }}
         >
           Criar Nova Conta
@@ -177,6 +184,7 @@ const App = () => {
             border: "none",
             marginBottom: "10px",
             cursor: "pointer",
+            borderRadius: "4px",
           }}
         >
           Fazer Login
@@ -192,6 +200,7 @@ const App = () => {
             background: "white",
             border: "1px solid #ccc",
             cursor: "pointer",
+            borderRadius: "4px",
           }}
         >
           Entrar com Google
@@ -200,11 +209,16 @@ const App = () => {
     );
   }
 
-  // Tela Principal (Logado)
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
+      {/* Header */}
       <div
-        style={{ background: "#f5f5f5", padding: "15px", marginBottom: "20px" }}
+        style={{
+          background: "#f5f5f5",
+          padding: "15px",
+          marginBottom: "20px",
+          borderRadius: "8px",
+        }}
       >
         <div
           style={{
@@ -225,6 +239,7 @@ const App = () => {
               color: "white",
               border: "none",
               cursor: "pointer",
+              borderRadius: "4px",
             }}
           >
             Sair
@@ -232,7 +247,42 @@ const App = () => {
         </div>
       </div>
 
-      <h2>Minhas Notas no Firestore</h2>
+      {/* Tabs */}
+      <div
+        style={{
+          display: "flex",
+          gap: "10px",
+          marginBottom: "20px",
+          borderBottom: "2px solid #e0e0e0",
+        }}
+      >
+        <button
+          onClick={() => setActiveTab("notes")}
+          style={{
+            padding: "10px 20px",
+            background: activeTab === "notes" ? "#2196f3" : "transparent",
+            color: activeTab === "notes" ? "white" : "#666",
+            border: "none",
+            cursor: "pointer",
+            borderRadius: "4px 4px 0 0",
+          }}
+        >
+          Notas
+        </button>
+        <button
+          onClick={() => setActiveTab("ai")}
+          style={{
+            padding: "10px 20px",
+            background: activeTab === "ai" ? "#2196f3" : "transparent",
+            color: activeTab === "ai" ? "white" : "#666",
+            border: "none",
+            cursor: "pointer",
+            borderRadius: "4px 4px 0 0",
+          }}
+        >
+          AI/ML
+        </button>
+      </div>
 
       {error && (
         <div
@@ -241,71 +291,90 @@ const App = () => {
             color: "#c62828",
             padding: "10px",
             marginBottom: "15px",
+            borderRadius: "4px",
           }}
         >
           {error}
         </div>
       )}
 
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-        <input
-          type="text"
-          value={newNote}
-          onChange={(e) => setNewNote(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleAddNote()}
-          placeholder="Digite uma nova nota..."
-          style={{ flex: 1, padding: "10px", fontSize: "14px" }}
-        />
-        <button
-          onClick={handleAddNote}
-          style={{
-            padding: "10px 20px",
-            background: "#2196f3",
-            color: "white",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Adicionar
-        </button>
-      </div>
-
-      <div>
-        {notes.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px", color: "#999" }}>
-            <p>Nenhuma nota ainda</p>
-            <p>Crie sua primeira nota acima</p>
-          </div>
-        ) : (
-          notes.map((note) => (
-            <div
-              key={note.id}
+      {/* Conteúdo das Tabs */}
+      {activeTab === "notes" ? (
+        <div>
+          <h2>Minhas Notas</h2>
+          <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+            <input
+              type="text"
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleAddNote()}
+              placeholder="Digite uma nova nota..."
               style={{
-                background: "#f5f5f5",
-                padding: "15px",
-                marginBottom: "10px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                flex: 1,
+                padding: "10px",
+                fontSize: "14px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+              }}
+            />
+            <button
+              onClick={handleAddNote}
+              style={{
+                padding: "10px 20px",
+                background: "#2196f3",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+                borderRadius: "4px",
               }}
             >
-              <span>{note.text}</span>
-              <button
-                onClick={() => handleDeleteNote(note.id)}
-                style={{
-                  padding: "5px 10px",
-                  background: "#f44336",
-                  color: "white",
-                  border: "none",
-                  cursor: "pointer",
-                }}
+              Adicionar
+            </button>
+          </div>
+
+          <div>
+            {notes.length === 0 ? (
+              <div
+                style={{ textAlign: "center", padding: "40px", color: "#999" }}
               >
-                Deletar
-              </button>
-            </div>
-          ))
-        )}
-      </div>
+                <p>Nenhuma nota ainda</p>
+              </div>
+            ) : (
+              notes.map((note) => (
+                <div
+                  key={note.id}
+                  style={{
+                    background: "#f5f5f5",
+                    padding: "15px",
+                    marginBottom: "10px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <span>{note.text}</span>
+                  <button
+                    onClick={() => handleDeleteNote(note.id)}
+                    style={{
+                      padding: "5px 10px",
+                      background: "#f44336",
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    Deletar
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ) : (
+        <AIPanel />
+      )}
     </div>
   );
 };
